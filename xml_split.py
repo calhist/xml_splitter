@@ -3,16 +3,13 @@
 
 import xml.etree.ElementTree as ET
 
-# enter the source filename
-fname = raw_input('>> Source filename? ')
-
 # register the namespaces
 ET.register_namespace('', "http://www.loc.gov/mods/v3")
 ET.register_namespace('xsi', "http://www.w3.org/2001/XMLSchema-instance")
 ET.register_namespace('xsi:schemaLocation', "http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-4.xsd")
 
 # parse
-context = ET.iterparse(fname, events=('end', ))
+context = ET.iterparse('source.xml', events=('end', ))
 
 for event, elem in context:
     if elem.tag == '{http://www.loc.gov/mods/v3}mods':
