@@ -1,8 +1,7 @@
 # Split XML containing many <mods> elements into invidual files
 # Modified from script found here: http://stackoverflow.com/questions/36155049/splitting-xml-file-into-multiple-at-given-tags
 
-# import xml.etree.ElementTree as ET
-import lxml.etree as ET
+import lxml.etree as ET 
 
 # parse source.xml with lxml
 tree = ET.parse('source.xml')
@@ -19,28 +18,32 @@ for element in tree.xpath(".//*[text()='null']"):
 for element in tree.xpath(".//*[@*='null']"):
 	element.getparent().remove(element)
 
-# remove non-nodes
+# remove some whitespace
 for element in tree.iter():
-	if element.tag == '{http://www.loc.gov/mods/v3}subject':
-		element.tail = ''
+    element.tail = None
 
+# remove any remaining whitespace
+parser = ET.XMLParser(remove_blank_text=True)
+treestring = ET.tostring(tree)
+clean = ET.XML(treestring, parser)
+
+# write out to temp file
+with open('clean.xml', 'wb') as f:
+    f.write(ET.tostring(clean))
 print "XML is now clean"
 
-# write to new xml
-tree.write('clean.xml')
-
 # parse the clean xml
-context = ET.iterparse('clean.xml', events=('end', ))
+cleanxml = ET.iterparse('clean.xml', events=('end', ))
 
 # find the mods nodes
-for event, elem in context:
+for event, elem in cleanxml:
     if elem.tag == '{http://www.loc.gov/mods/v3}mods':
 
         # the filenames of the resulting xml files will be based on the <identifier> element
         title = elem.find('{http://www.loc.gov/mods/v3}identifier').text
         filename = format(title + ".xml")
 
-        # open a new file
+        # open a new file and write out
         with open(filename, 'wb') as f:
             f.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
             f.write(ET.tostring(elem, pretty_print = True))
