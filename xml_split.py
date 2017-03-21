@@ -6,6 +6,23 @@ import lxml.etree as ET
 # parse source.xml with lxml
 tree = ET.parse('source.xml')
 
+# start cleanup
+# remove any element tails
+for element in tree.iter():
+    element.tail = None
+
+# remove any line breaks or tabs in element text
+    if element.text:
+        if '\n' in element.text:
+            element.text = element.text.replace('\n', '') 
+        if '\t' in element.text:
+            element.text = element.text.replace('\t', '')
+
+# remove any remaining whitespace
+parser = ET.XMLParser(remove_blank_text=True)
+treestring = ET.tostring(tree)
+clean = ET.XML(treestring, parser)
+
 # remove empty nodes
 for element in tree.xpath(".//*[not(node())]"):
 	element.getparent().remove(element)
@@ -16,18 +33,10 @@ for element in tree.xpath(".//*[text()='null']"):
 
 # remove nodes with attribute "null"
 for element in tree.xpath(".//*[@*='null']"):
-	element.getparent().remove(element)
+    element.getparent().remove(element)
 
-# remove some whitespace
-for element in tree.iter():
-    element.tail = None
-
-# remove any remaining whitespace
-parser = ET.XMLParser(remove_blank_text=True)
-treestring = ET.tostring(tree)
-clean = ET.XML(treestring, parser)
-
-# write out to temp file
+# finished cleanup
+# write out to intermediate file
 with open('clean.xml', 'wb') as f:
     f.write(ET.tostring(clean))
 print "XML is now clean"
@@ -35,7 +44,7 @@ print "XML is now clean"
 # parse the clean xml
 cleanxml = ET.iterparse('clean.xml', events=('end', ))
 
-# find the mods nodes
+# find the <mods> nodes
 for event, elem in cleanxml:
     if elem.tag == '{http://www.loc.gov/mods/v3}mods':
 
@@ -43,9 +52,9 @@ for event, elem in cleanxml:
         title = elem.find('{http://www.loc.gov/mods/v3}identifier').text
         filename = format(title + ".xml")
 
-        # open a new file and write out
+        # write out to new file
         with open(filename, 'wb') as f:
             f.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
             f.write(ET.tostring(elem, pretty_print = True))
         print "Writing", filename
-print "All done"
+print "All done!"
