@@ -1,7 +1,10 @@
 # Split XML containing many <mods> elements into invidual files
 # Modified from script found here: http://stackoverflow.com/questions/36155049/splitting-xml-file-into-multiple-at-given-tags
+# by Bill Levay for California Historical Society
 
-import lxml.etree as ET 
+import lxml.etree as ET
+# comment out below modules if working on NEW collections
+import codecs, json
 
 # parse source.xml with lxml
 tree = ET.parse('source.xml')
@@ -19,7 +22,7 @@ for element in tree.iter():
             element.text = element.text.replace('\t', '')
 
 # remove any remaining whitespace
-parser = ET.XMLParser(remove_blank_text=True)
+parser = ET.XMLParser(remove_blank_text=True, remove_comments=True)
 treestring = ET.tostring(tree)
 clean = ET.XML(treestring, parser)
 
@@ -44,13 +47,32 @@ print "XML is now clean"
 # parse the clean xml
 cleanxml = ET.iterparse('clean.xml', events=('end', ))
 
+# getting islandora IDs for existing collections
+# comment this out if preparing to ingest new collections!
+item_list = []
+
+with codecs.open('C:\\mods\\wagner\\data.json', encoding='utf-8') as filename:
+    item_list = json.load(filename)
+
+#close the file
+filename.close
+
 # find the <mods> nodes
 for event, elem in cleanxml:
     if elem.tag == '{http://www.loc.gov/mods/v3}mods':
 
         # the filenames of the resulting xml files will be based on the <identifier> element
-        title = elem.find('{http://www.loc.gov/mods/v3}identifier').text
-        filename = format(title + ".xml")
+        identifier = elem.find('{http://www.loc.gov/mods/v3}identifier').text
+        # filename = format(identifier + ".xml")
+
+        # look through the list of object metadata and get the islandora ID by matching the digital object ID
+        # comment this out if preparing to ingest new collections and use the filenaming line above instead
+        for item in item_list:
+            local_ID = item['identifier-type:local']
+            islandora_ID = item['PID']
+
+            if identifier == local_ID:
+                filename = format(islandora_ID + ".xml")
 
         # write out to new file
         with open(filename, 'wb') as f:
