@@ -3,8 +3,8 @@
 # by Bill Levay for California Historical Society
 
 import lxml.etree as ET
-# comment out below modules if working on NEW collections
-import codecs, json
+# uncomment below modules if doing MODS cleanup on existing Islandora objects
+# import codecs, json
 
 # parse source.xml with lxml
 tree = ET.parse('source.xml')
@@ -22,20 +22,29 @@ for element in tree.iter():
             element.text = element.text.replace('\t', '')
 
 # remove any remaining whitespace
-parser = ET.XMLParser(remove_blank_text=True, remove_comments=True)
+parser = ET.XMLParser(remove_blank_text=True, remove_comments=True, recover=True)
 treestring = ET.tostring(tree)
 clean = ET.XML(treestring, parser)
 
-# remove empty nodes
-for element in tree.xpath(".//*[not(node())]"):
-	element.getparent().remove(element)
+# remove recursively empty nodes
+# found here: https://stackoverflow.com/questions/12694091/python-lxml-how-to-remove-empty-repeated-tags
+def recursively_empty(e):
+   if e.text:
+       return False
+   return all((recursively_empty(c) for c in e.iterchildren()))
 
-# remove nodes with text "null"
-for element in tree.xpath(".//*[text()='null']"):
-	element.getparent().remove(element)
+context = ET.iterwalk(clean)
+for action, elem in context:
+    parent = elem.getparent()
+    if recursively_empty(elem):
+        parent.remove(elem)
+
+# remove nodes with blank attribute
+for element in clean.xpath(".//*[@*='']"):
+    element.getparent().remove(element)
 
 # remove nodes with attribute "null"
-for element in tree.xpath(".//*[@*='null']"):
+for element in clean.xpath(".//*[@*='null']"):
     element.getparent().remove(element)
 
 # finished cleanup
@@ -47,32 +56,38 @@ print "XML is now clean"
 # parse the clean xml
 cleanxml = ET.iterparse('clean.xml', events=('end', ))
 
+###
+# uncomment this section if doing MODS cleanup on existing Islandora objects
 # getting islandora IDs for existing collections
-# comment this out if preparing to ingest new collections!
-item_list = []
+# item_list = []
 
-with codecs.open('C:\\mods\\wagner\\data.json', encoding='utf-8') as filename:
-    item_list = json.load(filename)
+# json_path = 'C:\\mods\\maps\\data.json'
 
-#close the file
-filename.close
+# with codecs.open(json_path, encoding='utf-8') as filename:
+#     item_list = json.load(filename)
+
+# filename.close
+###
 
 # find the <mods> nodes
 for event, elem in cleanxml:
     if elem.tag == '{http://www.loc.gov/mods/v3}mods':
 
         # the filenames of the resulting xml files will be based on the <identifier> element
-        identifier = elem.find('{http://www.loc.gov/mods/v3}identifier').text
-        # filename = format(identifier + ".xml")
+        # edit the specific element or attribute if necessary
+        identifier = elem.find('{http://www.loc.gov/mods/v3}identifier[@type="local"]').text
+        filename = format(identifier + ".xml")
 
+        ### 
+        # uncomment this section if doing MODS cleanup on existing Islandora objects
         # look through the list of object metadata and get the islandora ID by matching the digital object ID
-        # comment this out if preparing to ingest new collections and use the filenaming line above instead
-        for item in item_list:
-            local_ID = item['identifier-type:local']
-            islandora_ID = item['PID']
+        # for item in item_list:
+        #     local_ID = item['identifier-type:oclc']
+        #     islandora_ID = item['PID']
 
-            if identifier == local_ID:
-                filename = format(islandora_ID + ".xml")
+        #     if identifier == local_ID:
+        #         filename = format(islandora_ID + "_MODS.xml")
+        ###
 
         # write out to new file
         with open(filename, 'wb') as f:
