@@ -61,11 +61,10 @@ cleanxml = ET.iterparse('clean.xml', events=('end', ))
 # getting islandora IDs for existing collections
 # item_list = []
 
-# json_path = 'C:\\mods\\maps\\data.json'
+# json_path = 'C:\\mods\\wagner\\data.json'
 
 # with codecs.open(json_path, encoding='utf-8') as filename:
 #     item_list = json.load(filename)
-
 # filename.close
 ###
 
@@ -75,14 +74,14 @@ for event, elem in cleanxml:
 
         # the filenames of the resulting xml files will be based on the <identifier> element
         # edit the specific element or attribute if necessary
-        identifier = elem.find('{http://www.loc.gov/mods/v3}identifier[@type="local"]').text
+        # identifier = elem.find('{http://www.loc.gov/mods/v3}identifier[@type="local"]').text
         filename = format(identifier + ".xml")
 
         ### 
         # uncomment this section if doing MODS cleanup on existing Islandora objects
         # look through the list of object metadata and get the islandora ID by matching the digital object ID
         # for item in item_list:
-        #     local_ID = item['identifier-type:oclc']
+        #     local_ID = item['identifier-type:local']
         #     islandora_ID = item['PID']
 
         #     if identifier == local_ID:
