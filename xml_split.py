@@ -2,9 +2,11 @@
 # Modified from script found here: http://stackoverflow.com/questions/36155049/splitting-xml-file-into-multiple-at-given-tags
 # by Bill Levay for California Historical Society
 
-import lxml.etree as ET
+import os, lxml.etree as ET
 # uncomment below modules if doing MODS cleanup on existing Islandora objects
 # import codecs, json
+
+output_path = 'C:\\mods\\clean\\'
 
 # parse source.xml with lxml
 tree = ET.parse('source.xml')
@@ -59,9 +61,10 @@ cleanxml = ET.iterparse('clean.xml', events=('end', ))
 ###
 # uncomment this section if doing MODS cleanup on existing Islandora objects
 # getting islandora IDs for existing collections
+###
 # item_list = []
 
-# json_path = 'C:\\mods\\wagner\\data.json'
+# json_path = 'C:\\mods\\maps\\data.json'
 
 # with codecs.open(json_path, encoding='utf-8') as filename:
 #     item_list = json.load(filename)
@@ -74,23 +77,27 @@ for event, elem in cleanxml:
 
         # the filenames of the resulting xml files will be based on the <identifier> element
         # edit the specific element or attribute if necessary
-        # identifier = elem.find('{http://www.loc.gov/mods/v3}identifier[@type="local"]').text
+        identifier = elem.find('{http://www.loc.gov/mods/v3}identifier[@type="local"]').text
         filename = format(identifier + ".xml")
 
         ### 
         # uncomment this section if doing MODS cleanup on existing Islandora objects
         # look through the list of object metadata and get the islandora ID by matching the digital object ID
+        ###
         # for item in item_list:
-        #     local_ID = item['identifier-type:local']
-        #     islandora_ID = item['PID']
+        #     local_ID = item["identifier-type:local"]
+        #     islandora_ID = item["PID"]
 
         #     if identifier == local_ID:
         #         filename = format(islandora_ID + "_MODS.xml")
         ###
 
         # write out to new file
-        with open(filename, 'wb') as f:
+        with open(source_path+filename, 'wb') as f:
             f.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
             f.write(ET.tostring(elem, pretty_print = True))
         print "Writing", filename
+
+# remove the intermediate file
+os.remove('clean.xml')
 print "All done!"
