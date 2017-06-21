@@ -93,7 +93,7 @@ for event, elem in cleanxml:
         ###
 
         # write out to new file
-        with open(source_path+filename, 'wb') as f:
+        with open(output_path+filename, 'wb') as f:
             f.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
             f.write(ET.tostring(elem, pretty_print = True))
         print "Writing", filename
