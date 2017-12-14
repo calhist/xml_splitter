@@ -4,7 +4,7 @@
 
 import os, lxml.etree as ET
 # uncomment below modules if doing MODS cleanup on existing Islandora objects
-# import codecs, json
+import codecs, json
 
 output_path = 'C:\\mods\\clean\\'
 
@@ -64,7 +64,7 @@ cleanxml = ET.iterparse('clean.xml', events=('end', ))
 ###
 # item_list = []
 
-# json_path = 'C:\\mods\\maps\\data.json'
+# json_path = 'C:\\mods\\data.json'
 
 # with codecs.open(json_path, encoding='utf-8') as filename:
 #     item_list = json.load(filename)
